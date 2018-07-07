@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script>
+        (function(doc, win, undefined) {
+            var docEl = doc.documentElement,
+                resizeEvt = 'orientationchange' in win ? 'orientationchange' : 'resize',
+                recalc = function() {
+                    var clientWidth = docEl.clientWidth;
+                    if (clientWidth === undefined) return;
+                    docEl.style.fontSize = 100 * (clientWidth / 750) + 'px';
+                };
+            if (doc.addEventListener === undefined) return;
+            win.addEventListener(resizeEvt, recalc, false);
+            doc.addEventListener('DOMContentLoaded', recalc, false)
+        })(document, window);
+    </script>
+    <style>
+        body,
+        dd,
+        dl,
+        dt,
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6,
+        html,
+        li,
+        ol,
+        p,
+        ul {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            max-width: 7.5rem;
+            font-size: 0.3rem;
+            font-family: "arial,helvetica,sans-serif";
+        }
+
+        dd,
+        dl,
+        dt,
+        ul {
+            list-style: none;
+        }
+
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+        }
+
+        img {
+            display: block;
+            border: 0;
+        }
+
+        a {
+            display: block;
+        }
+
+        .carousel ul,
+        li {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .container {
+            width: 100%;
+            height: 100%;
+        }
+
+        .carousel {
+            position: relative;
+            overflow: hidden;
+            width: 7.5rem;
+            height: 4rem;
+        }
+
+        .carousel .img-ct {
+            width: 45rem;
+            height: 4rem;
+            margin-left: -7.5rem;
+        }
+
+        .carousel .img-ct>li {
+            float: left;
+        }
+
+        .carousel .img-ct img {
+            width: 7.5rem;
+            height: 4rem;
+        }
+
+        .bullet {
+            position: absolute;
+            right: .2rem;
+            bottom: .2rem;
+        }
+
+        .bullet li {
+            float: left;
+            width: .16rem;
+            height: .16rem;
+            margin: 0 .1rem;
+            border-radius: .08rem;
+            background-color: #fff;
+        }
+
+        .bullet li.active {
+            background-color: #ff8803;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div class="container">
+        <div class="carousel">
+            <ul class="img-ct">
+                <li><a href="#"><img src="img/img1.jpg"></a></li>
+                <li><a href="#"><img src="img/img2.jpg"></a></li>
+                <li><a href="#"><img src="img/img3.jpg"></a></li>
+                <li><a href="#"><img src="img/img4.jpg"></a></li>
+            </ul>
+            <ul class="bullet">
+                <li class="active"></li>
+                <li></li>
+                <li></li>
+                <li></li>
+            </ul>
+        </div>
+
+    </div>
+
+    <script src="http://code.jquery.com/jquery-latest.js"></script>
+    <script>
+        let $carousel = $('.carousel')
+        let $imgCt = $('.img-ct')
+        let $imgs = $imgCt.find('li')
+        let $bullets = $('.bullet>li')
+
+        let imgCount = $imgs.length
+        let pageIndex = 0
+        let isClick = false // 开关
+        let timer = null
+
+        // 动态首尾添加一张图片
+        $imgCt.append($imgs.first().clone())
+        $imgCt.prepend($imgs.last().clone())
+
+
+        // 手指按下事件
+        let start; // 按下的点
+        $carousel.on('touchstart', function(e) {
+            let touches = event.touches[0]
+            start = {
+                x: touches.pageX,
+                y: touches.pageY
+            }
+        })
+
+        // 手指移动事件
+        let delta; // 手指移动的距离
+        $carousel.on('touchmove', function(e) {
+            let touches = event.touches[0]
+            delta = {
+                x: touches.pageX - start.x,
+                y: touches.pageY - start.y
+            }
+            // 防止纵向位移
+            if (Math.abs(delta.x) > Math.abs(delta.y)) {
+                event.preventDefault()
+            }
+        })
+
+
+        // 手指抬起事件
+        $carousel.on('touchend', function(e) {
+            let endX = event.changedTouches[0].pageX
+            // 向右滑动
+            if (start.x - endX > 20) {
+                next ()
+            }
+            // 向左滑动
+            if (endX - start.x > 20) {
+                prev ()
+            }
+        })
+
+        // 自动播放
+        timer = setInterval(function () {
+            next ()
+        },2000)
+
+        // 向右切换
+        function next () {
+            if (isClick) return
+            isClick = true
+            $imgCt.animate({
+                marginLeft: '-=7.5rem'
+            }, function() {
+                pageIndex++
+                // 边界处理
+                if (pageIndex  === imgCount) {
+                    pageIndex = 0
+                    $imgCt.css({
+                        marginLeft: '-7.5rem'
+                    })
+                }
+                // 小圆点处理
+                setbullet (pageIndex)
+                isClick = false
+            })
+        }
+
+        // 向左滑动
+        function prev () {
+            if (isClick) return
+            isClick = true
+            $imgCt.animate({
+                marginLeft: '+=7.5rem'
+            }, function() {
+                pageIndex--
+                // 边界处理
+                if (pageIndex < 0) {
+                    pageIndex = imgCount - 1
+                    $imgCt.css({
+                        marginLeft: '-30rem'
+                    })
+                }
+                // 小圆点处理
+                setbullet (pageIndex)
+                isClick = false
+            })
+        }
+
+        // 小圆点处理
+        function setbullet (index) {
+            $bullets.eq(index).addClass('active')
+                .siblings().removeClass('active')
+        }
+
+    </script>
+</body>
+
+</html>
